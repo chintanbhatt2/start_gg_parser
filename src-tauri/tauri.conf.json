@@ -1,8 +1,8 @@
 {
   "$schema": "https://schema.tauri.app/config/2",
-  "productName": "start_gg_parser",
+  "productName": "start-gg-parser",
   "version": "0.1.0",
-  "identifier": "com.cb.start_gg_parser",
+  "identifier": "com.cb.start-gg-parser",
   "build": {
     "beforeDevCommand": "pnpm dev",
     "devUrl": "http://localhost:1420",
@@ -12,7 +12,7 @@
   "app": {
     "windows": [
       {
-        "title": "start_gg_parser",
+        "title": "start-gg-parser",
         "width": 800,
         "height": 600
       }

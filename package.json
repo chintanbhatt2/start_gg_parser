@@ -5,9 +5,10 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
-    "build": "tsc && vite build",
+    "build": "pnpm run check:query-id-scalar && tsc && vite build",
     "preview": "vite preview",
-    "tauri": "tauri"
+    "tauri": "tauri",
+    "check:query-id-scalar": "powershell -ExecutionPolicy Bypass -File ./scripts/check-query-id-scalar.ps1"
   },
   "dependencies": {
     "react": "^19.1.0",

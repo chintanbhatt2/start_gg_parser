@@ -1,0 +1,41 @@
+query($tourneySlug: String) {
+	tournament(slug: $tourneySlug) {
+		id
+		name
+		events {
+			id
+			name
+			startAt
+			standings(query: {page: 1, perPage: 500}) {
+				nodes {
+					placement
+					entrant {
+						id
+					}
+					player {
+						id
+						prefix
+						gamerTag
+					}
+				}
+			}
+			entrants(query: {page: 1, perPage: 500}) {
+				nodes {
+					id
+					name
+					paginatedSets(page: 1, perPage: 500){
+						nodes {
+							id
+						}
+					}
+				}
+			}
+			sets(page: 1, perPage: 500) {
+				nodes {
+					id
+					winnerId
+				}
+			}
+		}
+	}
+}

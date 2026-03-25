@@ -6,10 +6,12 @@ import "./App.css";
 function App() {
   const [greetMsg, setGreetMsg] = useState("");
   const [name, setName] = useState("");
+  const [token, setToken] = useState("");
 
   async function greet() {
     // Learn more about Tauri commands at https://tauri.app/develop/calling-rust/
-    setGreetMsg(await invoke("greet", { name }));
+    console.log("Invoking Rust command with name:", name);
+    setGreetMsg(await invoke("get_tournament_json", { tournamentName: name, authToken: token }));
   }
 
   return (
@@ -40,6 +42,11 @@ function App() {
           id="greet-input"
           onChange={(e) => setName(e.currentTarget.value)}
           placeholder="Enter a name..."
+        />
+        <input
+          id="token-input"
+          onChange={(e) => setToken(e.currentTarget.value)}
+          placeholder="Enter your auth token..."
         />
         <button type="submit">Greet</button>
       </form>

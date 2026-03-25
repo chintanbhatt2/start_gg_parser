@@ -1,0 +1,6 @@
+query TestQuery($tourneySlug: String) {
+  tournament(slug: $tourneySlug) {
+    id
+    name
+	}
+}
