@@ -44,6 +44,8 @@
 .row {
   display: flex;
   justify-content: center;
+  gap: 0.5rem;
+  flex-wrap: wrap;
 }
 
 a {
@@ -95,6 +97,111 @@ button {
   margin-right: 5px;
 }
 
+.recent-slugs {
+  width: min(1100px, 92vw);
+  margin: 1rem auto 0;
+  text-align: left;
+}
+
+.recent-slugs-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 0.75rem;
+  margin-bottom: 0.6rem;
+}
+
+.recent-slugs-header h3 {
+  margin: 0;
+  font-size: 1rem;
+}
+
+.recent-slugs-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.45rem;
+}
+
+.recent-slug-chip {
+  padding: 0.38rem 0.7rem;
+  border-radius: 999px;
+  font-size: 0.88rem;
+  background-color: #eef2fb;
+  border: 1px solid #c8d4ef;
+  box-shadow: none;
+}
+
+.csv-preview {
+  width: min(1100px, 92vw);
+  margin: 1.5rem auto 0;
+  text-align: left;
+}
+
+.csv-preview-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 0.75rem;
+  margin-bottom: 0.75rem;
+}
+
+.preview-toggle {
+  display: inline-flex;
+  gap: 0.4rem;
+}
+
+.preview-toggle button.active {
+  border-color: #396cd8;
+  background-color: #e9f0ff;
+}
+
+.csv-row-card {
+  border: 1px solid #cfd3dc;
+  border-radius: 10px;
+  margin-bottom: 0.85rem;
+  padding: 0.85rem;
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+  gap: 0.65rem;
+}
+
+.csv-field {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.csv-field span {
+  font-size: 0.82rem;
+  color: #546172;
+}
+
+.csv-table-wrap {
+  overflow: auto;
+  border: 1px solid #cfd3dc;
+  border-radius: 10px;
+}
+
+.csv-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.92rem;
+}
+
+.csv-table th,
+.csv-table td {
+  border-bottom: 1px solid #e3e7ef;
+  padding: 0.55rem 0.65rem;
+  text-align: left;
+  white-space: nowrap;
+}
+
+.csv-table th {
+  background-color: #f1f4fa;
+  position: sticky;
+  top: 0;
+}
+
 @media (prefers-color-scheme: dark) {
   :root {
     color: #f6f6f6;
@@ -110,6 +217,35 @@ button {
     color: #ffffff;
     background-color: #0f0f0f98;
   }
+
+  .csv-row-card {
+    border-color: #4e5663;
+  }
+
+  .recent-slug-chip {
+    background-color: #2f3b56;
+    border-color: #54658c;
+  }
+
+  .csv-field span {
+    color: #b8c1cf;
+  }
+
+  .preview-toggle button.active {
+    border-color: #4e83ff;
+    background-color: #1f2f58;
+  }
+
+  .csv-table-wrap,
+  .csv-table th,
+  .csv-table td {
+    border-color: #4e5663;
+  }
+
+  .csv-table th {
+    background-color: #293243;
+  }
+
   button:active {
     background-color: #0f0f0f69;
   }
