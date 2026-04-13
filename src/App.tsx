@@ -109,6 +109,8 @@ function App() {
   const [previewMode, setPreviewMode] = useState<"form" | "table">(() => getStoredPreviewMode());
   const [recentSlugs, setRecentSlugs] = useState<string[]>(() => getStoredRecentSlugs());
   const [updateNotification, setUpdateNotification] = useState<string | null>(null);
+  const [availableUpdate, setAvailableUpdate] = useState<Exclude<Awaited<ReturnType<typeof check>>, null> | null>(null);
+  const [isUpdateInstalling, setIsUpdateInstalling] = useState(false);
 
   useEffect(() => {
     localStorage.setItem(VIEW_MODE_STORAGE_KEY, previewMode);
@@ -132,38 +134,8 @@ function App() {
           return;
         }
 
-        setStatusMsg(`Update found (${update.version}). Downloading...`);
-        await update.downloadAndInstall();
-        if (!cancelled) {
-          setStatusMsg("Update downloaded. Restart the app to apply the latest version.");
-        }
-      } catch (error) {
-        if (!cancelled) {
-          const errorMessage = error instanceof Error ? error.message : String(error);
-          setStatusMsg(`Auto-update check failed: ${errorMessage}`);
-        }
-      }
-    })();
-
-    return () => {
-      cancelled = true;
-    };
-  }, []);
-  useEffect(() => {
-    let cancelled = false;
-
-    (async () => {
-      try {
-        const update = await check();
-        if (!update || cancelled) {
-          return;
-        }
-
-        setUpdateNotification(`Update available (${update.version}). Downloading...`);
-        await update.downloadAndInstall();
-        if (!cancelled) {
-          setUpdateNotification("Update downloaded. Restart the app to apply the latest version.");
-        }
+        setAvailableUpdate(update);
+        setUpdateNotification(`Update available (${update.version}). Download now?`);
       } catch (error) {
         if (!cancelled) {
           const errorMessage = error instanceof Error ? error.message : String(error);
@@ -176,6 +148,26 @@ function App() {
       cancelled = true;
     };
   }, []);
+
+  async function handleInstallUpdate() {
+    if (!availableUpdate || isUpdateInstalling) {
+      return;
+    }
+
+    setIsUpdateInstalling(true);
+    setUpdateNotification(`Downloading update (${availableUpdate.version})...`);
+
+    try {
+      await availableUpdate.downloadAndInstall();
+      setAvailableUpdate(null);
+      setUpdateNotification("Update downloaded. Restart the app to apply the latest version.");
+    } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : String(error);
+      setUpdateNotification(`Update download failed: ${errorMessage}`);
+    } finally {
+      setIsUpdateInstalling(false);
+    }
+  }
 
   useEffect(() => {
     let unlisten: UnlistenFn | null = null;
@@ -407,14 +399,34 @@ function App() {
           )}
         </section>
       )}
-    </main>
-  );
+
       {updateNotification && (
         <div className="update-toast" role="status">
           <span>{updateNotification}</span>
-          <button type="button" className="update-toast-dismiss" onClick={() => setUpdateNotification(null)} aria-label="Dismiss">✕</button>
+          <div className="update-toast-actions">
+            {availableUpdate && (
+              <button
+                type="button"
+                className="update-toast-action"
+                onClick={handleInstallUpdate}
+                disabled={isUpdateInstalling}
+              >
+                {isUpdateInstalling ? "Downloading..." : "Download update"}
+              </button>
+            )}
+            <button
+              type="button"
+              className="update-toast-dismiss"
+              onClick={() => setUpdateNotification(null)}
+              aria-label="Dismiss"
+            >
+              x
+            </button>
+          </div>
         </div>
       )}
+    </main>
+  );
 }
 
 export default App;
