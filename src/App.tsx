@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from "react";
 import { invoke } from "@tauri-apps/api/core";
 import { listen, type UnlistenFn } from "@tauri-apps/api/event";
 import { save } from "@tauri-apps/plugin-dialog";
+import { check } from "@tauri-apps/plugin-updater";
 import "./App.css";
 
 type CsvPreview = {
@@ -119,6 +120,34 @@ function App() {
   useEffect(() => {
     localStorage.setItem(RECENT_SLUGS_STORAGE_KEY, JSON.stringify(recentSlugs));
   }, [recentSlugs]);
+
+  useEffect(() => {
+    let cancelled = false;
+
+    (async () => {
+      try {
+        const update = await check();
+        if (!update || cancelled) {
+          return;
+        }
+
+        setStatusMsg(`Update found (${update.version}). Downloading...`);
+        await update.downloadAndInstall();
+        if (!cancelled) {
+          setStatusMsg("Update downloaded. Restart the app to apply the latest version.");
+        }
+      } catch (error) {
+        if (!cancelled) {
+          const errorMessage = error instanceof Error ? error.message : String(error);
+          setStatusMsg(`Auto-update check failed: ${errorMessage}`);
+        }
+      }
+    })();
+
+    return () => {
+      cancelled = true;
+    };
+  }, []);
 
   useEffect(() => {
     let unlisten: UnlistenFn | null = null;
