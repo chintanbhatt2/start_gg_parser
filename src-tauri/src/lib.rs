@@ -22,6 +22,7 @@ struct TournamentRow {
     losses: i32,
     player_name: String,
     player_prefix: String,
+    player_discriminator: String,
     discord_usernames: String,
 }
 
@@ -48,6 +49,7 @@ struct MutableTournamentRow {
     losses: i32,
     player_name: String,
     player_prefix: String,
+    player_discriminator: String,
     discord_usernames: String,
 }
 
@@ -78,9 +80,41 @@ impl From<MutableTournamentRow> for TournamentRow {
             losses: value.losses,
             player_name: value.player_name,
             player_prefix: value.player_prefix,
+            player_discriminator: value.player_discriminator,
             discord_usernames: value.discord_usernames,
         }
     }
+}
+
+fn get_entrant_player_discriminator(entrant: &queries::tournament::EntrantsEntrant) -> String {
+    let mut discriminators: Vec<String> = Vec::new();
+
+    if let Some(participants) = entrant.participants.as_ref() {
+        for maybe_participant in participants {
+            let Some(participant) = maybe_participant.as_ref() else {
+                continue;
+            };
+
+            let Some(user) = participant.user.as_ref() else {
+                continue;
+            };
+
+            let Some(discriminator) = user.discriminator.as_ref() else {
+                continue;
+            };
+
+            let trimmed = discriminator.trim();
+            if trimmed.is_empty() {
+                continue;
+            }
+
+            if !discriminators.iter().any(|existing| existing == trimmed) {
+                discriminators.push(trimmed.to_string());
+            }
+        }
+    }
+
+    discriminators.join(" | ")
 }
 
 fn get_entrant_discord_usernames(entrant: &queries::tournament::EntrantsEntrant) -> String {
@@ -272,6 +306,7 @@ impl EventAccumulator {
 
                 let entrant_name = entrant.name.clone().unwrap_or_default();
                 let (player_prefix, player_name) = split_prefix_and_name(&entrant_name);
+                let player_discriminator = get_entrant_player_discriminator(entrant);
                 let discord_usernames = get_entrant_discord_usernames(entrant);
 
                 let was_known_entrant = self.row_by_entrant_id.contains_key(&entrant_id);
@@ -291,10 +326,16 @@ impl EventAccumulator {
                         losses: 0,
                         player_name,
                         player_prefix,
+                        player_discriminator: player_discriminator.clone(),
                         discord_usernames: discord_usernames.clone(),
                     });
 
                 if let Some(row) = self.row_by_entrant_id.get_mut(&entrant_id) {
+                    if row.player_discriminator.is_empty() && !player_discriminator.is_empty() {
+                        row.player_discriminator = player_discriminator;
+                        changed = true;
+                    }
+
                     if row.discord_usernames.is_empty() && !discord_usernames.is_empty() {
                         row.discord_usernames = discord_usernames;
                         changed = true;

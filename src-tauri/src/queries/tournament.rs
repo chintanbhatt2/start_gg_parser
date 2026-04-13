@@ -88,6 +88,7 @@ pub struct EntrantParticipant {
 #[derive(cynic::QueryFragment, Debug)]
 #[cynic(graphql_type = "User")]
 pub struct EntrantUser {
+    pub discriminator: Option<String>,
     #[arguments(types: [DISCORD])]
     pub authorizations: Option<Vec<Option<EntrantAuthorization>>>,
 }
