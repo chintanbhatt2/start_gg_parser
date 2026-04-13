@@ -56,6 +56,9 @@ jobs:
 
       - name: Build Tauri app
         run: pnpm tauri build
+        env:
+          TAURI_SIGNING_PRIVATE_KEY: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY }}
+          TAURI_SIGNING_PRIVATE_KEY_PASSWORD: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY_PASSWORD }}
 
       - name: Publish GitHub release artifacts
         uses: softprops/action-gh-release@v2
@@ -67,5 +70,7 @@ jobs:
             src-tauri/target/release/bundle/**/*.dmg
             src-tauri/target/release/bundle/**/*.app.tar.gz
             src-tauri/target/release/bundle/**/*.zip
+            src-tauri/target/release/bundle/**/latest.json
+            src-tauri/target/release/bundle/**/*.sig
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
