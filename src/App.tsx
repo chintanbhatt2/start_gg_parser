@@ -1,11 +1,19 @@
 import { useEffect, useMemo, useState } from "react";
 import { invoke } from "@tauri-apps/api/core";
+import { listen, type UnlistenFn } from "@tauri-apps/api/event";
 import { save } from "@tauri-apps/plugin-dialog";
 import "./App.css";
 
 type CsvPreview = {
   headers: string[];
   rows: string[][];
+};
+
+type DownloadProgressEvent = {
+  tournamentSlug: string;
+  page: number;
+  message: string;
+  done: boolean;
 };
 
 const VIEW_MODE_STORAGE_KEY = "startgg.previewMode";
@@ -91,6 +99,8 @@ function parseCsv(csvText: string): CsvPreview {
 
 function App() {
   const [statusMsg, setStatusMsg] = useState("");
+  const [isLoading, setIsLoading] = useState(false);
+  const [progressMsg, setProgressMsg] = useState("");
   const [name, setName] = useState("");
   const [token, setToken] = useState<string>(() => getStoredAuthToken());
   const [csvData, setCsvData] = useState("");
@@ -109,6 +119,22 @@ function App() {
   useEffect(() => {
     localStorage.setItem(RECENT_SLUGS_STORAGE_KEY, JSON.stringify(recentSlugs));
   }, [recentSlugs]);
+
+  useEffect(() => {
+    let unlisten: UnlistenFn | null = null;
+
+    (async () => {
+      unlisten = await listen<DownloadProgressEvent>("download-progress", (event) => {
+        setProgressMsg(event.payload.message);
+      });
+    })();
+
+    return () => {
+      if (unlisten) {
+        unlisten();
+      }
+    };
+  }, []);
 
   const hasCsvPreview = useMemo(() => csvPreview.headers.length > 0 && csvPreview.rows.length > 0, [csvPreview]);
 
@@ -146,6 +172,9 @@ function App() {
       return null;
     }
 
+    setProgressMsg("Preparing download...");
+    setIsLoading(true);
+
     let responseCsv: string;
     try {
       responseCsv = await invoke<string>("get_tournament_rows_csv", {
@@ -157,6 +186,9 @@ function App() {
       const errorMessage = error instanceof Error ? error.message : String(error);
       setStatusMsg(errorMessage);
       return null;
+    } finally {
+      setIsLoading(false);
+      setProgressMsg("");
     }
 
     const parsed = parseCsv(responseCsv);
@@ -222,15 +254,17 @@ function App() {
           value={name}
           onChange={(e) => setName(e.currentTarget.value)}
           placeholder="Enter tournament slug(s)"
+          disabled={isLoading}
         />
         <input
           id="token-input"
           value={token}
           onChange={(e) => setToken(e.currentTarget.value)}
           placeholder="Enter your auth token..."
+          disabled={isLoading}
         />
-        <button type="submit">Download Tournament</button>
-        <button type="button" onClick={exportCsv}>Export CSV</button>
+        <button type="submit" disabled={isLoading}>Download Tournament</button>
+        <button type="button" onClick={exportCsv} disabled={isLoading}>Export CSV</button>
       </form>
 
       {recentSlugs.length > 0 && (
@@ -247,6 +281,13 @@ function App() {
             ))}
           </div>
         </section>
+      )}
+
+      {isLoading && (
+        <div className="loading-indicator" role="status" aria-live="polite">
+          <span className="spinner" aria-hidden="true" />
+          <span>{progressMsg || "Downloading tournament data..."}</span>
+        </div>
       )}
 
       <p>{statusMsg}</p>

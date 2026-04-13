@@ -131,6 +131,29 @@ button {
   box-shadow: none;
 }
 
+.loading-indicator {
+  margin: 1rem auto 0;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.6rem;
+  font-weight: 600;
+}
+
+.spinner {
+  width: 1rem;
+  height: 1rem;
+  border-radius: 50%;
+  border: 2px solid #c8d4ef;
+  border-top-color: #396cd8;
+  animation: spin 0.8s linear infinite;
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
 .csv-preview {
   width: min(1100px, 92vw);
   margin: 1.5rem auto 0;
@@ -229,6 +252,11 @@ button {
 
   .csv-field span {
     color: #b8c1cf;
+  }
+
+  .spinner {
+    border-color: #4e5663;
+    border-top-color: #4e83ff;
   }
 
   .preview-toggle button.active {
