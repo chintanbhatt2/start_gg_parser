@@ -108,6 +108,7 @@ function App() {
   const [csvPreview, setCsvPreview] = useState<CsvPreview>({ headers: [], rows: [] });
   const [previewMode, setPreviewMode] = useState<"form" | "table">(() => getStoredPreviewMode());
   const [recentSlugs, setRecentSlugs] = useState<string[]>(() => getStoredRecentSlugs());
+  const [updateNotification, setUpdateNotification] = useState<string | null>(null);
 
   useEffect(() => {
     localStorage.setItem(VIEW_MODE_STORAGE_KEY, previewMode);
@@ -140,6 +141,33 @@ function App() {
         if (!cancelled) {
           const errorMessage = error instanceof Error ? error.message : String(error);
           setStatusMsg(`Auto-update check failed: ${errorMessage}`);
+        }
+      }
+    })();
+
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+  useEffect(() => {
+    let cancelled = false;
+
+    (async () => {
+      try {
+        const update = await check();
+        if (!update || cancelled) {
+          return;
+        }
+
+        setUpdateNotification(`Update available (${update.version}). Downloading...`);
+        await update.downloadAndInstall();
+        if (!cancelled) {
+          setUpdateNotification("Update downloaded. Restart the app to apply the latest version.");
+        }
+      } catch (error) {
+        if (!cancelled) {
+          const errorMessage = error instanceof Error ? error.message : String(error);
+          setUpdateNotification(`Auto-update check failed: ${errorMessage}`);
         }
       }
     })();
@@ -381,6 +409,12 @@ function App() {
       )}
     </main>
   );
+      {updateNotification && (
+        <div className="update-toast" role="status">
+          <span>{updateNotification}</span>
+          <button type="button" className="update-toast-dismiss" onClick={() => setUpdateNotification(null)} aria-label="Dismiss">✕</button>
+        </div>
+      )}
 }
 
 export default App;

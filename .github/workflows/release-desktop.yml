@@ -46,6 +46,33 @@ jobs:
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
 
+      - name: Resolve release tag and app version
+        id: resolve_version
+        shell: bash
+        run: |
+          if [ "${GITHUB_REF_TYPE}" = "tag" ]; then
+            release_tag="${GITHUB_REF_NAME}"
+          else
+            release_tag="$(git ls-remote --refs --tags origin "v*" | awk -F/ '{print $3}' | sort -V | tail -n 1)"
+          fi
+
+          if [ -z "${release_tag}" ]; then
+            echo "Unable to determine release tag."
+            exit 1
+          fi
+
+          app_version="${release_tag#v}"
+          echo "RELEASE_TAG=${release_tag}" >> "$GITHUB_ENV"
+          echo "APP_VERSION=${app_version}" >> "$GITHUB_ENV"
+          echo "release_tag=${release_tag}" >> "$GITHUB_OUTPUT"
+          echo "app_version=${app_version}" >> "$GITHUB_OUTPUT"
+          echo "Using release tag ${release_tag} and app version ${app_version}."
+
+      - name: Update tauri.conf.json version
+        shell: bash
+        run: |
+          node -e "const fs=require('fs'); const p='src-tauri/tauri.conf.json'; const version=process.env.APP_VERSION; if(!version){throw new Error('APP_VERSION is not set');} const config=JSON.parse(fs.readFileSync(p,'utf8')); config.version=version; fs.writeFileSync(p, JSON.stringify(config, null, 2)+'\\n'); console.log('Updated '+p+' version to '+version);"
+
       - name: Build and publish Tauri app
         uses: tauri-apps/tauri-action@v0
         env:
@@ -53,8 +80,8 @@ jobs:
           TAURI_SIGNING_PRIVATE_KEY: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY }}
           TAURI_SIGNING_PRIVATE_KEY_PASSWORD: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY_PASSWORD }}
         with:
-          tagName: ${{ github.ref_name }}
-          releaseName: "start-gg-parser ${{ github.ref_name }}"
+          tagName: ${{ steps.resolve_version.outputs.release_tag }}
+          releaseName: "start-gg-parser ${{ steps.resolve_version.outputs.release_tag }}"
           releaseBody: "See the assets to download and install this version."
           releaseDraft: false
           prerelease: false
