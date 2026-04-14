@@ -1,0 +1,81 @@
+# Operations used by query_tournament_rows in src-tauri/src/query.rs
+
+query TournamentMetadata($tourneySlug: String) {
+  tournament(slug: $tourneySlug) {
+    id
+    events {
+      id
+      name
+      startAt
+    }
+  }
+}
+
+query TournamentStandingsPage($tourneySlug: String, $page: Int!, $perPage: Int!) {
+  tournament(slug: $tourneySlug) {
+    events {
+      id
+      standings(query: { page: $page, perPage: $perPage }) {
+        pageInfo {
+          totalPages
+        }
+        nodes {
+          placement
+          entrant {
+            id
+          }
+          player {
+            id
+          }
+        }
+      }
+    }
+  }
+}
+
+query TournamentSetsPage($tourneySlug: String, $page: Int!, $perPage: Int!) {
+  tournament(slug: $tourneySlug) {
+    events {
+      id
+      sets(page: $page, perPage: $perPage) {
+        pageInfo {
+          totalPages
+        }
+        nodes {
+          id
+          winnerId
+          slots {
+            entrant {
+              id
+            }
+          }
+        }
+      }
+    }
+  }
+}
+
+query EventEntrantsPage($eventId: ID, $page: Int!, $perPage: Int!) {
+  event(id: $eventId) {
+    id
+    entrants(query: { page: $page, perPage: $perPage }) {
+      pageInfo {
+        totalPages
+      }
+      nodes {
+        id
+        name
+        participants {
+          gamerTag
+          prefix
+          user {
+            discriminator
+            authorizations(types: [DISCORD]) {
+              externalUsername
+            }
+          }
+        }
+      }
+    }
+  }
+}
